@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" src="underscore.js"></script>
+    <script type="text/javascript" src="calendar.js"></script>
+  </head>
+  <body>
+    <div id="calendar"></div>
+    <script type="text/javascript">
+var cal;
+
+(function() {
+  cal = new Calendar($('#calendar'));
+  cal.render({
+  });
+})();
+    </script>
+  </body>
+</html>
