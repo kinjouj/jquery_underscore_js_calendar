@@ -9,9 +9,17 @@
     <script type="text/javascript">
 var cal;
 
+XMLHttpRequest.prototype.oldOpen = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function(method, path, async) {
+  path = "http://localhost:5000" + path;
+
+  this.oldOpen(method, path, async);
+};
+
 (function() {
-  cal = new Calendar($('#calendar'));
+  cal = new Calendar();
   cal.render({
+    "element": $('#calendar')
   });
 })();
     </script>
