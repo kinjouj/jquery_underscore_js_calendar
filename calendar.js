@@ -1,12 +1,10 @@
 function zeroPadding(text) {
-  if (!_.isNumber(text)) {
-    throw new Error("invalid argument isn`t a number");
-  }
+  if (_.isNumber(text)) {
+    text = String(text);
 
-  text = String(text);
-
-  if (!_.isEmpty(text) && text.length == 1) {
-    text = "0" + text;
+    if (!_.isEmpty(text) && text.length == 1) {
+      text = "0" + text;
+    }
   }
 
   return text;
@@ -22,12 +20,10 @@ function load_events(path, callback) {
 }
 
 var Calendar = function(year, month) {
-  var date;
+  var date = new Date();
 
-  if ((!_.isUndefined(year) && !_.isNull(year)) && (!_.isUndefined(month) && !_.isNull(month))) {
+  if (_.isNumber(year) && _.isNumber(month)) {
     date = new Date(year, month - 1);
-  } else {
-    date = new Date();
   }
 
   year = date.getFullYear();
@@ -36,7 +32,7 @@ var Calendar = function(year, month) {
   var currentMonth = new Date(year, month, 1);
   var currentMonthDaysNum = currentMonth.getDay();
 
-  var monthOfDays = _.range(1,Math.round((new Date(year, month + 1, 1).getTime() - currentMonth.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  var monthOfDays = _.range(1, Math.round((new Date(year, month + 1, 1).getTime() - currentMonth.getTime()) / (1000 * 60 * 60 * 24)) + 1);
 
   var monthOfDaysWeek = monthOfDays.splice(0, 7 - currentMonthDaysNum);
   _.range(currentMonthDaysNum).forEach(function() {
@@ -47,7 +43,7 @@ var Calendar = function(year, month) {
   monthOfDaysWeeks.push(monthOfDaysWeek);
 
   while (monthOfDays.length > 0) {
-    monthOfDaysWeek = monthOfDays.splice(0,7);
+    monthOfDaysWeek = monthOfDays.splice(0, 7);
 
     if (monthOfDaysWeek.length < 7) {
       _.range(7 - monthOfDaysWeek.length).forEach(function() {
@@ -58,18 +54,9 @@ var Calendar = function(year, month) {
     monthOfDaysWeeks.push(monthOfDaysWeek);
   }
 
-  month += 1;
-
   this._year = year;
-  this._month = month;
+  this._month = month + 1;
   this._month_of_days = monthOfDaysWeeks;
-
-  load_events(
-    "/api/calendar/" + year + "/" + zeroPadding(month),
-    $.proxy(function(res) {
-      this.events = res;
-    }, this)
-  );
 };
 
 Calendar.prototype.renderHeaderElement = function(container) {
@@ -107,6 +94,8 @@ Calendar.prototype.renderDaysElement = function(monthOfDays ,container) {
     $.proxy(function(weekOfDays, week) {
       var weekOfDaysElement = $('<tr>');
 
+      console.log(week);
+
       weekOfDays.forEach(
         $.proxy(function(weekOfDay) {
           if (weekOfDay === null) {
@@ -127,7 +116,9 @@ Calendar.prototype.renderDaysElement = function(monthOfDays ,container) {
             }
           }
 
-          weekOfDaysElement.append($('<td>').css("padding", "5px").text(weekOfDay));
+          weekOfDaysElement.append(
+            $('<td>').css("padding", "5px").text(zeroPadding(weekOfDay))
+          );
         }, this)
       );
 
@@ -154,6 +145,8 @@ Calendar.prototype.render = function(options) {
   if (_.isFunction(this.renderHeaderElement)) {
     this.options = options;
 
+    this.eventLoader(this.getYear(), this.getMonth());
+
     var container = $('<table>').attr("id", "calendar-container").css("width", "180px").css("border", "1px solid black");
 
     this.renderHeaderElement(container);
@@ -164,6 +157,25 @@ Calendar.prototype.render = function(options) {
       renderElement.append(container);
     }
   }
+};
+
+Calendar.prototype.eventLoader = function(year, month) {
+  var options = this.options;
+
+  if (!_.isObject(options)) {
+    throw new Error("invalid options isn`t a Object");
+  }
+
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/api/calendar/" + year + "/" + zeroPadding(month), false);
+    xhr.onload = $.proxy(function() {
+      this.events = JSON.parse(xhr.response);
+    }, this);
+    xhr.send(null);
+  } catch(e) {
+    console.error(e);
+  };
 };
 
 Calendar.prototype.getYear = function() {
