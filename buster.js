@@ -1,6 +1,6 @@
 module.exports['calendar tests'] = {
   "environment": "browser",
-  "libs": ["jquery.js", "underscore.js"],
+  "libs": ["libs/*.js"],
   "sources": ["calendar.js"],
   "tests": ["tests/*.js"],
   "resources": [
