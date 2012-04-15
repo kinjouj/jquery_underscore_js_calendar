@@ -7,6 +7,10 @@
   text-decoration: none;
 }
 
+#calendar-body {
+  text-align: center;
+}
+
 #calendar-body td {
-  padding: 5px;
+  padding: 8px;
 }

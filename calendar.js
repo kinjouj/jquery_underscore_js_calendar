@@ -1,26 +1,18 @@
 "use strict";
 
 function zeroPadding(n) {
-  if (_.isUndefined(n) || _.isNull(n)) {
-    throw new Error("invalid argument: undefined or null");
-  }
-
-  if (parseInt(n) === NaN) {
-    throw new Error("invalid argument: isn`t a number");
-  }
-
-  if (n > 0 && n <= 9) {
-    n = "0" + n;
+  if (_.isNumber(n) && n > 0 && n <= 9) {
+    return "0" + n;
   }
 
   return n;
 }
 
-var Calendar = function(year, month) {
+var Calendar = function(year, month, events) {
   var date = new Date();
 
   if (_.isNumber(year) && _.isNumber(month)) {
-    date = new Date(year, month - 1);
+    date = new Date(year, month);
   }
 
   year = date.getFullYear();
@@ -50,28 +42,61 @@ var Calendar = function(year, month) {
     monthOfDaysWeeks.push(monthOfDaysWeek);
   }
 
+  if (!_.isObject(events)) {
+    events = this.eventLoader(year, month + 1);
+  }
+
   this.year = year;
-  this.month = month + 1;
+  this.month = month;
   this.monthOfDays = monthOfDaysWeeks;
+  this.events = events;
+
+  Object.freeze(this);
 };
 
-Calendar.prototype.renderHeaderElement = function(container) {
+Calendar.prototype.renderHeaderElement = function(root, container) {
   if (!_.isElement(container[0])) {
     throw new Error("invalid argument: container isn`t a jQuery Element");
   }
 
+  if (!_.isElement(root[0])) {
+    throw new Error("invalid attribute: element isn`t a Element");
+  }
+
+  if (!_.isNumber(this.year)) {
+    throw new Error("invalid attribute: year isn`t a number");
+  }
+
+  if (!_.isNumber(this.month)) {
+    throw new Error("invalid attribute: month isn`t a number");
+  }
+
+  var curYear = new Date(this.year, this.month).getFullYear();
+
   var prevControl = $("<td>").append(
-    $("<a>").attr("href", "javascript:void(0)").text("<").click(
-      $.proxy(function() {
-        new Calendar(this.year, this.month - 1).render(this.element);
-      }, this)
-    )
+    $("<a>").attr("href", "javascript:void(0)").text("<").click($.proxy(function() {
+        var prevDate = new Date(this.year, this.month - 1);
+        var events = this.events;
+
+        if (curYear !== prevDate.getFullYear()) {
+          events = null;
+        }
+
+        new Calendar(prevDate.getFullYear(), prevDate.getMonth(), events).render(root);
+      }, this))
   );
 
   var nextControl = $("<td>").css("text-align", "right").append(
     $("<a>").attr("href", "javascript:void(0)").text(">").click(
       $.proxy(function() {
-        new Calendar(this.year, this.month + 1).render(this.element);
+        var nextDate = new Date(this.year, this.month + 1);
+        var events = this.events;
+
+        if (curYear !== nextDate.getFullYear()) {
+          events = null;
+        }
+
+        new Calendar(nextDate.getFullYear(), nextDate.getMonth(), events).render(root);
       }, this)
     )
   );
@@ -80,7 +105,7 @@ Calendar.prototype.renderHeaderElement = function(container) {
     $("<thead>").attr("id" , "calendar-header").append(
       $("<tr>").append(
         prevControl,
-        $("<td>").attr("colspan", "5").css("text-align", "center").text(this.year + "/" + zeroPadding(this.month)),
+        $("<td>").attr("colspan", "5").css("text-align", "center").text(this.year + "/" + zeroPadding(this.month + 1)),
         nextControl
       )
     )
@@ -102,8 +127,10 @@ Calendar.prototype.renderDaysElement = function(monthOfDays, container) {
 
           var events = this.events;
 
-          if (_.isArray(events) && events.length > 0) {
-            if (_.indexOf(events, weekOfDay) !== -1) {
+          if (_.isObject(events)) {
+            var event = events[this.month + 1];
+
+            if (!_.isUndefined(event) && _.indexOf(event, weekOfDay) !== -1) {
               weekOfDay = zeroPadding(weekOfDay);
 
               var hrefValue = "/archive/" + this.year + "/" + zeroPadding(this.month) + "/" + weekOfDay;
@@ -131,39 +158,32 @@ Calendar.prototype.renderDaysElement = function(monthOfDays, container) {
   container.append(monthOfDaysElement);
 };
 
-Calendar.prototype.render = function(element) {
-  if (!_.isElement(element[0])) {
-    throw new Error("invalid argument: element isn`t a Element");
+Calendar.prototype.render = function(root) {
+  if (!_.isElement(root[0])) {
+    throw new Error("invalid argument: root isn`t a Element");
   }
 
-  element.children($('<table>')).remove();
+  root.children($('<table>')).remove();
 
   if (_.isFunction(this.renderHeaderElement)) {
-    this.element = element;
-
     var container = $("<table>").attr("id", "calendar-container");
 
-    this.renderHeaderElement(container);
+    this.renderHeaderElement(root, container);
 
     if (_.isFunction(this.renderDaysElement)) {
-      this.events = this.eventLoader(this.year, this.month);
       this.renderDaysElement(this.monthOfDays, container);
 
-      element.append(container);
+      root.append(container);
     }
   }
 };
 
-Calendar.prototype.getEventLoaderURL = function(year, month) {
+Calendar.prototype.getEventLoaderURL = function(year) {
   if (!_.isNumber(year)) {
     throw new Error("invalid argument: year isn`t a number");
   }
 
-  if (!_.isNumber(month)) {
-    throw new Error("invalid argument: month isn`t a number");
-  }
-
-  return "/api/calendar/" + year + "/" + zeroPadding(month);
+  return "/api/calendar/" + year;
 };
 
 Calendar.prototype.getEventsResponse = function(url) {
@@ -171,10 +191,16 @@ Calendar.prototype.getEventsResponse = function(url) {
     throw new Error("invalid argument: url isn`t a string");
   }
 
+  console.info(url);
+
   var res = $.ajax({
     "url": url,
     "async": false,
-    "type": "GET"
+    "type": "GET",
+    "dataType": "json",
+    "error": function(xhr, status, e) {
+      throw e;
+    }
   });
 
   if (res.status == 200) {
@@ -182,21 +208,17 @@ Calendar.prototype.getEventsResponse = function(url) {
   }
 
   return null;
-}
+};
 
-Calendar.prototype.eventLoader = function(year, month) {
+Calendar.prototype.eventLoader = function(year) {
   if (!_.isNumber(year)) {
     throw new Error("invalid argument: year isn`t a number");
   }
 
-  if (_.isUndefined(month) || _.isNull(month)) {
-    throw new Error("invalid argument: month isn`t defined");
-  }
-
-  var events = new Array;
+  var events = null;
 
   try {
-    var url = this.getEventLoaderURL(year, month);
+    var url = this.getEventLoaderURL(year);
 
     if (!_.isString(url)) {
       throw new Error("getEventLoaderURL returned isn`t a String");
