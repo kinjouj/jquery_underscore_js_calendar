@@ -3,6 +3,7 @@
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="underscore.js"></script>
     <script type="text/javascript" src="calendar.js"></script>
+    <link rel="stylesheet" type="text/css" href="calendar.css"></script>
   </head>
   <body>
     <div id="calendar"></div>
@@ -18,9 +19,7 @@ XMLHttpRequest.prototype.open = function(method, path, async) {
 
 (function() {
   cal = new Calendar();
-  cal.render({
-    "element": $('#calendar')
-  });
+  cal.render($('#calendar'));
 })();
     </script>
   </body>

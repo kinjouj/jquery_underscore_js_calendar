@@ -1,4 +1,12 @@
-#calendar-header {
-  padding: 0px;
-  background-color: #333333;
+#calendar-container {
+  width: 180px;
+}
+
+#calendar-container a {
+  color: #44F;
+  text-decoration: none;
+}
+
+#calendar-body td {
+  padding: 5px;
 }
