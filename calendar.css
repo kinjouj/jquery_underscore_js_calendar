@@ -7,10 +7,18 @@
   text-decoration: none;
 }
 
+#calendar-control-next {
+  text-align: right;
+}
+
+#calendar-label {
+  text-align: center;
+}
+
 #calendar-body {
   text-align: center;
 }
 
 #calendar-body td {
-  padding: 8px;
+  padding: 5px;
 }

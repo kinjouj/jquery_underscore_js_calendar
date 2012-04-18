@@ -1,5 +1,5 @@
 all:
 
 install:
-	cp calendar.js ../Desktop/blog/public/static/js/
-	cp calendar.css ../Desktop/blog/public/static/css/
+	cp calendar.js ../blog/public/static/js/
+	cp calendar.css ../blog/public/static/css/
