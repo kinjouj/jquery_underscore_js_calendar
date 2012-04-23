@@ -2,8 +2,8 @@
   <head>
     <script type="text/javascript" src="libs/jquery.js"></script>
     <script type="text/javascript" src="libs/underscore.js"></script>
-    <script type="text/javascript" src="calendar.js"></script>
-    <link rel="stylesheet" type="text/css" href="calendar.css"></script>
+    <script type="text/javascript" src="libs/calendar.js"></script>
+    <link rel="stylesheet" type="text/css" href="libs/calendar.css"></script>
   </head>
   <body>
     <div id="calendar"></div>
@@ -18,7 +18,7 @@ XMLHttpRequest.prototype.open = function(method, path, async) {
 };
 
 (function() {
-  cal = new Calendar(2011, 6);
+  cal = new Calendar();
   cal.render($('#calendar'));
 })();
     </script>

@@ -1,1 +1,2 @@
-libs/*
+libs/jquery.js
+libs/underscore.js
