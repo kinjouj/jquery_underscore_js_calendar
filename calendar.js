@@ -72,8 +72,6 @@ Calendar.prototype.renderHeader = function(root, container) {
   var prevControl = $("<td>").attr("id", "calendar-control-previous").append(
     $("<a>").attr("href", "javascript:void(0)").text("<").click(
       $.proxy(function() {
-        console.log(root);
-
         var prevDate = new Date(curYear, curMonth - 1);
         var prevYear = prevDate.getFullYear();
 
