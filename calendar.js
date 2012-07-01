@@ -257,6 +257,9 @@ Calendar.prototype.getEvents = function() {
       "async": false,
       "type": "GET",
       "dataType": "json",
+      "beforeSend": function(xhr) {
+        xhr.setRequestHeader("Accept", "application/json");
+      },
       "error": function(x, s, e) {
         throw e;
       }
